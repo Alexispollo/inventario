@@ -97,6 +97,7 @@ td input{width:90px;text-align:right;padding:6px 8px}
   <label>Contraseña<input id="pass" type="password" autocomplete="current-password" required></label>
   <div class="err" id="loginErr" role="alert"></div>
   <button class="primary" type="submit">Entrar</button>
+  <button type="button" id="resetCfg">Cambiar conexión (URL y clave)</button>
 </form>
 
 <div id="app" hidden>
@@ -200,7 +201,10 @@ async function loadAll(){
 $("login").addEventListener("submit",async e=>{
   e.preventDefault();$("loginErr").textContent="";
   const {error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("pass").value});
-  if(error){$("loginErr").textContent="Correo o contraseña incorrectos.";return}
+  if(error){
+    const m=(error.message||"").toLowerCase();
+    $("loginErr").textContent=m.includes("invalid login")?"Correo o contraseña incorrectos.":"Error real: "+(error.message||"desconocido")+(error.status?" (código "+error.status+")":"")+". Si dice algo de la clave (API key), toca «Cambiar conexión» y usa la clave antigua (legacy anon).";
+    return}
   $("pass").value="";enter();
 });
 $("setup").addEventListener("submit",e=>{
@@ -217,6 +221,7 @@ $("invite").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText(link);say("Enlace copiado. Mándaselo a tu amigo: al abrirlo ya queda conectado y solo escribe su correo y contraseña.")}
   catch(x){prompt("Copia este enlace y mándaselo a tu amigo:",link)}
 });
+$("resetCfg").addEventListener("click",()=>{try{localStorage.removeItem(CFG_KEY)}catch(x){}sb=null;show("setup")});
 $("logout").addEventListener("click",()=>sb.auth.signOut());
 
 function resize(file){
